@@ -1,8 +1,11 @@
 package com.rokkhan.trackmon;
 
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
+import com.rokkhan.trackmon.data.ActiveTracking;
+import com.rokkhan.trackmon.data.TrackingStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -10,11 +13,10 @@ import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Style;
 
 /**
  * Listens for Pokémon spawns in the world and notifies players
- * if a tracked Pokémon appears nearby.
+ * if a tracked Pokémon appears nearby and is actively being tracked.
  */
 public class SpawnListener {
 
@@ -46,13 +48,14 @@ public class SpawnListener {
             // Check all players in the world
             for (Player player : level.players()) {
                 if (player instanceof ServerPlayer serverPlayer) {
+                    var uuid = serverPlayer.getUUID();
 
                     // Check if the Pokémon is within tracking radius
                     double distanceSquared = serverPlayer.distanceToSqr(pokemonEntity);
                     if (distanceSquared <= Config.trackingRadius * Config.trackingRadius) {
 
-                        // Check if the player is tracking this Pokémon
-                        if (CommandHandler.isTracked(serverPlayer, name)) {
+                        // Check if the player is tracking this Pokémon and it's actively being tracked
+                        if (TrackingStorage.isTracked(uuid, name) && ActiveTracking.isActive(uuid, name)) {
 
                             // Send a system message to the player
                             serverPlayer.sendSystemMessage(
@@ -60,7 +63,6 @@ public class SpawnListener {
                                             .append(Component.literal(name).withStyle(ChatFormatting.RED))
                                             .append(Component.literal(" has spawned at: " + pos.toShortString()).withStyle(Style.EMPTY))
                             );
-
 
                             // Optional: log the spawn to the console
                             if (Config.enableTrackingLog) {
