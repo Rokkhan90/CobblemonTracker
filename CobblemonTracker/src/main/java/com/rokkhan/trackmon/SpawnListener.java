@@ -56,10 +56,11 @@ public class SpawnListener {
 
                             // Send a system message to the player
                             serverPlayer.sendSystemMessage(
-                                    Component.literal(name)
-                                            .withStyle(Style.EMPTY.withColor(ChatFormatting.RED))
-                                            .append(Component.literal(" has spawned at: " + pos.toShortString()))
+                                    Component.literal("")
+                                            .append(Component.literal(name).withStyle(ChatFormatting.RED))
+                                            .append(Component.literal(" has spawned at: " + pos.toShortString()).withStyle(Style.EMPTY))
                             );
+
 
                             // Optional: log the spawn to the console
                             if (Config.enableTrackingLog) {

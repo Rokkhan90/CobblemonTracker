@@ -31,6 +31,7 @@ public class TrackmonScreen extends Screen {
     public TrackmonScreen() {
         super(Component.literal("Trackmon GUI"));
 
+        // Load all Pokémon species, filter out excluded ones, and sort alphabetically
         this.allPokemon = PokemonSpecies.INSTANCE.getSpecies().stream()
                 .map(Species::getName)
                 .map(String::toLowerCase)
@@ -44,6 +45,7 @@ public class TrackmonScreen extends Screen {
         this.filteredPokemon = new ArrayList<>(allPokemon);
     }
 
+    // Capitalizes the first letter of a Pokémon name
     private String capitalize(String name) {
         if (name == null || name.isEmpty()) return name;
         return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
@@ -60,10 +62,12 @@ public class TrackmonScreen extends Screen {
                 ? new HashSet<>(TrackingStorage.getTracked(playerUUID))
                 : Set.of();
 
-        searchBox = new EditBox(this.font, this.width / 2 - 75, 20, 150, 20, Component.literal("Suche..."));
+        // Search box for filtering Pokémon list
+        searchBox = new EditBox(this.font, this.width / 2 - 75, 20, 150, 20, Component.literal("Search..."));
         searchBox.setResponder(this::updateFilter);
         this.addRenderableWidget(searchBox);
 
+        // Create checkboxes for each Pokémon
         for (String name : allPokemon) {
             TrackmonCheckbox checkbox = new TrackmonCheckbox(0, 0, checkboxWidth, checkboxHeight, Component.literal(name), trackedSet.contains(name));
             checkboxes.put(name, checkbox);
@@ -72,10 +76,12 @@ public class TrackmonScreen extends Screen {
         int scrollAreaX = this.width / 2 - checkboxWidth / 2;
         int scrollAreaY = listTop;
 
+        // Scroll up button
         this.addRenderableWidget(Button.builder(Component.literal("↑"), btn -> {
             if (scrollOffset > 0) scrollOffset--;
         }).bounds(scrollAreaX + checkboxWidth + 5, scrollAreaY, 20, 20).build());
 
+        // Scroll down button
         this.addRenderableWidget(Button.builder(Component.literal("↓"), btn -> {
             if (scrollOffset < filteredPokemon.size() - maxVisible) scrollOffset++;
         }).bounds(scrollAreaX + checkboxWidth + 5, scrollAreaY + listHeight - 20, 20, 20).build());
@@ -83,14 +89,16 @@ public class TrackmonScreen extends Screen {
         int buttonY = this.height - 80;
         int buttonWidth = 120;
 
+        // Start tracking selected Pokémon
         this.addRenderableWidget(Button.builder(Component.literal("Start Tracking"), btn -> {
             List<String> selected = getSelectedPokemon();
-            sendCommand("trackmon", selected);
+            sendCommand("trackmon track", selected);
             if (playerUUID != null) {
                 TrackingStorage.setTracked(playerUUID, selected);
             }
         }).bounds(this.width / 2 - buttonWidth - spacing, buttonY, buttonWidth, 20).build());
 
+        // Stop tracking selected Pokémon
         this.addRenderableWidget(Button.builder(Component.literal("Stop Tracking"), btn -> {
             List<String> selected = getSelectedPokemon();
             sendCommand("trackmon stop", selected);
@@ -101,6 +109,7 @@ public class TrackmonScreen extends Screen {
             }
         }).bounds(this.width / 2 + spacing, buttonY, buttonWidth, 20).build());
 
+        // Clear all tracking
         this.addRenderableWidget(Button.builder(Component.literal("Clear"), btn -> {
             sendCommand("trackmon clear", List.of());
             if (playerUUID != null) {
@@ -109,11 +118,13 @@ public class TrackmonScreen extends Screen {
             checkboxes.values().forEach(cb -> cb.setChecked(false));
         }).bounds(this.width / 2 - buttonWidth - spacing, buttonY + 25, buttonWidth, 20).build());
 
-        this.addRenderableWidget(Button.builder(Component.literal("Schließen"), btn -> {
+        // Close GUI
+        this.addRenderableWidget(Button.builder(Component.literal("Close"), btn -> {
             this.onClose();
         }).bounds(this.width / 2 + spacing, buttonY + 25, buttonWidth, 20).build());
     }
 
+    // Updates the filtered Pokémon list based on search input
     private void updateFilter(String input) {
         scrollOffset = 0;
         filteredPokemon = allPokemon.stream()
@@ -121,12 +132,14 @@ public class TrackmonScreen extends Screen {
                 .collect(Collectors.toList());
     }
 
+    // Returns a list of currently selected Pokémon
     private List<String> getSelectedPokemon() {
         return filteredPokemon.stream()
                 .filter(name -> checkboxes.get(name).isChecked())
                 .collect(Collectors.toList());
     }
 
+    // Sends a command for each selected Pokémon
     private void sendCommand(String baseCommand, List<String> pokemonList) {
         if (minecraft.player == null) return;
 
@@ -139,6 +152,7 @@ public class TrackmonScreen extends Screen {
         }
     }
 
+    // Handles mouse scroll for list navigation
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         int scrollAreaX = this.width / 2 - checkboxWidth / 2;
@@ -160,6 +174,7 @@ public class TrackmonScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
+    // Handles mouse clicks on checkboxes
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int scrollAreaX = this.width / 2 - checkboxWidth / 2;
@@ -182,6 +197,7 @@ public class TrackmonScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
+    // Renders the GUI elements
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
@@ -208,10 +224,12 @@ public class TrackmonScreen extends Screen {
         return false;
     }
 
+    // Opens the GUI screen
     public static void open() {
         Minecraft.getInstance().setScreen(new TrackmonScreen());
     }
 
+    // Handles key input to open the GUI when the keybind is pressed
     public static class ClientEvents {
         @net.neoforged.bus.api.SubscribeEvent
         public static void onKeyInput(net.neoforged.neoforge.client.event.InputEvent.Key event) {
@@ -221,6 +239,7 @@ public class TrackmonScreen extends Screen {
         }
     }
 
+    // Registers the keybind for opening the GUI
     public static void registerKeybinds(net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent event) {
         event.register(TrackmonKeybinds.OPEN_GUI_KEY);
     }

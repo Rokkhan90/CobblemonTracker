@@ -1,4 +1,3 @@
-
 # Cobblemon Trackmon
 
 Cobblemon Trackmon is an addon for the Cobblemon mod that allows players to track specific Cobblemon using chat commands and a GUI. This mod is designed to enhance your gameplay by notifying you when specific Cobblemon spawn nearby.
@@ -10,7 +9,7 @@ Cobblemon Trackmon is an addon for the Cobblemon mod that allows players to trac
 - Remove specific Cobblemon from the tracking list.
 - Clear the entire tracking list.
 - GUI for managing tracked Cobblemon with search and selection features.
-- Cobblemon Trackmon is designed to be compatible with other Cobblemon addons. It interacts with Cobblemon entities in a non-intrusive way, ensuring that it can be used alongside other 
+- Cobblemon Trackmon is designed to be compatible with other Cobblemon addons. It interacts with Cobblemon entities in a non-intrusive way, ensuring that it can be used alongside other
   mods that extend or modify Cobblemon functionality.
 
 ## Commands
@@ -20,7 +19,6 @@ Cobblemon Trackmon is an addon for the Cobblemon mod that allows players to trac
 - `/trackmon stop <pokemon>`: Remove a specific Cobblemon from the tracking list.
 - `/trackmon clear`: Clear the entire tracking list.
 - `/trackmon list`: Shows the tracking list.
-
 
 ## GUI Usage
 
@@ -44,6 +42,35 @@ Cobblemon Trackmon is an addon for the Cobblemon mod that allows players to trac
 3. Download the Cobblemon Trackmon mod.
 4. Place the Cobblemon Trackmon mod `.jar` file into your Minecraft `mods` folder.
 
-## License
+## Configuration
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+The `trackmon-common.toml` file is used to configure the behavior of the Cobblemon Trackmon mod. This file is located in the `config` folder of your Minecraft directory, alongside the `mods` folder.
+
+### Configuration Options
+
+- `trackingRadius`: Radius in blocks for tracking Cobblemon spawns. Default is 100. Range is 1 to 1000.
+- `starterPokemon`: List of starter Cobblemon names to track when using `/trackmon starter`.  
+  If this list is empty, a default internal list will be used.  
+  Example: `["charmander", "bulbasaur", "squirtle"]`
+- `enableTrackingLog`: Whether to log tracked Cobblemon spawns to the console. Default is `true`.
+- `excludedPokemon`: List of Cobblemon names to exclude from the GUI.  
+  Example: `["rattata", "pidgey"]`
+
+### Example `trackmon-common.toml`
+
+```toml
+# Radius in blocks for tracking Pokémon spawns
+# Default: 100
+# Range: 1 ~ 1000
+trackingRadius = 100
+
+# List of starter Pokémon names
+# If empty, a default internal list will be used
+# Example: ["charmander", "bulbasaur", "squirtle"]
+starterPokemon = []
+
+# Log tracked Pokémon spawns to console
+enableTrackingLog = false
+# List of Pokémon names to exclude from the GUI
+# Example: ["rattata", "pidgey"]
+excludedPokemon = []

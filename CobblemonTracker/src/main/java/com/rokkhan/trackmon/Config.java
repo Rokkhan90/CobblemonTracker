@@ -27,42 +27,12 @@ public class Config {
 
     /**
      * List of starter Pokémon names to track when using /trackmon starter.
+     * If this list is empty, a default internal list will be used instead.
      */
     public static final ModConfigSpec.ConfigValue<List<? extends String>> STARTER_POKEMON = BUILDER
-            .comment("List of starter Pokémon names")
+            .comment("List of starter Pokémon names. If empty, a default list will be used.")
             .defineListAllowEmpty("starterPokemon",
-                    List.of(
-                            // Gen 1 – Kanto
-                            "bulbasaur", "charmander", "squirtle", "pikachu",
-
-                            // Gen 2 – Johto
-                            "chikorita", "cyndaquil", "totodile",
-
-                            // Gen 3 – Hoenn
-                            "treecko", "torchic", "mudkip",
-
-                            // Gen 4 – Sinnoh
-                            "turtwig", "chimchar", "piplup",
-
-                            // Gen 5 – Einall / Unova
-                            "snivy", "tepig", "oshawott",
-
-                            // Gen 6 – Kalos
-                            "chespin", "fennekin", "froakie",
-
-                            // Gen 7 – Alola
-                            "rowlet", "litten", "popplio",
-
-                            // Gen 8 – Galar
-                            "grookey", "scorbunny", "sobble",
-
-                            // Gen 9 – Paldea
-                            "sprigatito", "fuecoco", "quaxly",
-
-                            // Hisui-Starter
-                            "cyndaquil_hisui", "oshawott_hisui", "rowlet_hisui"
-                    )
-                    ,
+                    List.of(), // Default is empty; fallback handled in onLoad()
                     obj -> obj instanceof String);
 
     /**
@@ -95,8 +65,37 @@ public class Config {
     @net.neoforged.bus.api.SubscribeEvent
     public static void onLoad(final ModConfigEvent event) {
         trackingRadius = TRACKING_RADIUS.get();
-        starterPokemon = STARTER_POKEMON.get().stream().map(String::toLowerCase).toList();
         enableTrackingLog = ENABLE_TRACKING_LOG.get();
         excludedPokemon = EXCLUDED_POKEMON.get().stream().map(String::toLowerCase).toList();
+
+        List<? extends String> loadedStarters = STARTER_POKEMON.get();
+        if (loadedStarters.isEmpty()) {
+            // Use default hardcoded list if TOML list is empty
+            starterPokemon = List.of(
+                    // Gen 1 – Kanto
+                    "bulbasaur", "charmander", "squirtle", "pikachu",
+                    // Gen 2 – Johto
+                    "chikorita", "cyndaquil", "totodile",
+                    // Gen 3 – Hoenn
+                    "treecko", "torchic", "mudkip",
+                    // Gen 4 – Sinnoh
+                    "turtwig", "chimchar", "piplup",
+                    // Gen 5 – Unova
+                    "snivy", "tepig", "oshawott",
+                    // Gen 6 – Kalos
+                    "chespin", "fennekin", "froakie",
+                    // Gen 7 – Alola
+                    "rowlet", "litten", "popplio",
+                    // Gen 8 – Galar
+                    "grookey", "scorbunny", "sobble",
+                    // Gen 9 – Paldea
+                    "sprigatito", "fuecoco", "quaxly",
+                    // Hisui variants
+                    "cyndaquil_hisui", "oshawott_hisui", "rowlet_hisui"
+            );
+        } else {
+            // Use custom list from config
+            starterPokemon = loadedStarters.stream().map(String::toLowerCase).toList();
+        }
     }
 }

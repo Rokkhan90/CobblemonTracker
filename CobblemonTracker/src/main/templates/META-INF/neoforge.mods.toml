@@ -23,10 +23,10 @@ license="MIT"
 modId="trackmon" #mandatory
 
 # The version number of the mod
-version="1.0.6" #mandatory
+version="1.0.7" #mandatory
 
 # A display name for the mod
-displayName="Trackmon" #mandatory
+displayName="Cobblemon Trackmon" #mandatory
 
 # A URL to query for updates for this mod. See the JSON update specification https://docs.neoforged.net/docs/misc/updatechecker/
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
