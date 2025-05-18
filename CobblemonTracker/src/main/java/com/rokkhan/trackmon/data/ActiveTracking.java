@@ -8,6 +8,10 @@ import java.util.*;
  */
 public class ActiveTracking {
 
+    public static Set<String> getActive(UUID player) {
+        return active.getOrDefault(player, Set.of());
+    }
+
     // In-memory map of player UUIDs to actively tracked Pokémon names
     private static final Map<UUID, Set<String>> active = new HashMap<>();
 
@@ -16,7 +20,9 @@ public class ActiveTracking {
      * This replaces any previously active list.
      */
     public static void setActive(UUID player, List<String> names) {
-        active.put(player, new HashSet<>(names.stream().map(String::toLowerCase).toList()));
+        Set<String> lower = new HashSet<>(names.stream().map(String::toLowerCase).toList());
+        active.put(player, lower);
+        System.out.println("ActiveTracking.setActive: " + player + " → " + lower);
     }
 
     /**
@@ -40,6 +46,8 @@ public class ActiveTracking {
      * Checks if a specific Pokémon is actively tracked by the player.
      */
     public static boolean isActive(UUID player, String name) {
-        return active.getOrDefault(player, Set.of()).contains(name.toLowerCase());
+        boolean result = active.getOrDefault(player, Set.of()).contains(name.toLowerCase());
+        System.out.println("ActiveTracking.isActive: " + player + " → " + name + " = " + result);
+        return result;
     }
 }

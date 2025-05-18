@@ -9,6 +9,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import com.rokkhan.trackmon.data.TrackingStorage;
+import com.rokkhan.trackmon.data.ActiveTracking;
 
 import java.util.*;
 
@@ -57,52 +59,70 @@ public class CommandHandler {
                                 .executes(context -> {
                                     String name = StringArgumentType.getString(context, "pokemon").toLowerCase();
                                     ServerPlayer player = context.getSource().getPlayerOrException();
-                                    Set<String> tracked = trackedPokemon.getOrDefault(player.getUUID(), new HashSet<>());
-                                    if (tracked.remove(name)) {
-                                        context.getSource().sendSuccess(() -> Component.literal("Stopped tracking " + name), false);
-                                    } else {
-                                        context.getSource().sendFailure(Component.literal(name + " was not being tracked."));
-                                    }
+                                    UUID uuid = player.getUUID();
+
+                                    // Entferne das Pokémon nur aus der aktiven Liste
+                                    ActiveTracking.remove(uuid, List.of(name));
+
+                                    context.getSource().sendSuccess(() -> Component.literal("Stopped tracking " + name), false);
                                     return 1;
                                 })))
+
 
                 // /trackmon clear
                 .then(Commands.literal("clear")
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
-                            trackedPokemon.remove(player.getUUID());
+                            UUID uuid = player.getUUID();
+
+                            TrackingStorage.clear(uuid);
+                            ActiveTracking.clear(uuid);
+
                             context.getSource().sendSuccess(() -> Component.literal("Cleared all tracked Pokémon."), false);
                             return 1;
-                        }))
+                        })
+                )
 
                 // /trackmon list
                 .then(Commands.literal("list")
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
-                            Set<String> tracked = trackedPokemon.getOrDefault(player.getUUID(), Set.of());
+                            List<String> tracked = TrackingStorage.getTracked(player.getUUID());
+
                             if (tracked.isEmpty()) {
                                 context.getSource().sendSuccess(() -> Component.literal("You are not tracking any Pokémon."), false);
                             } else {
                                 context.getSource().sendSuccess(() -> Component.literal("Tracking: " + String.join(", ", tracked)), false);
                             }
                             return 1;
-                        }))
+                        })
+                )
 
                 // /trackmon starter
                 .then(Commands.literal("starter")
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
-                            trackedPokemon.computeIfAbsent(player.getUUID(), k -> new HashSet<>()).addAll(Config.starterPokemon);
+                            UUID uuid = player.getUUID();
+
+                            List<String> current = new ArrayList<>(TrackingStorage.getTracked(uuid));
+                            for (String starter : Config.starterPokemon) {
+                                if (!current.contains(starter)) {
+                                    current.add(starter);
+                                }
+                            }
+                            TrackingStorage.setTracked(uuid, current);
+                            ActiveTracking.setActive(uuid, Config.starterPokemon);
+
                             context.getSource().sendSuccess(() -> Component.literal("Tracking all starter Pokémon."), false);
                             return 1;
-                        }))
-        );
+                        })));
     }
 
     /**
      * Checks if a Pokémon is currently tracked by the player.
      */
-    public static boolean isTracked(ServerPlayer player, String pokemonName) {
+    /*public static boolean isTracked(ServerPlayer player, String pokemonName) {
         return trackedPokemon.getOrDefault(player.getUUID(), Set.of()).contains(pokemonName.toLowerCase());
-    }
+        }
+        */
 }

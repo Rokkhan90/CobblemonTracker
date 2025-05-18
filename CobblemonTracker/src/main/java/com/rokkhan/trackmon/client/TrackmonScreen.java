@@ -58,26 +58,34 @@ public class TrackmonScreen extends Screen {
         maxVisible = listHeight / (checkboxHeight + spacing);
 
         UUID playerUUID = minecraft.player != null ? minecraft.player.getUUID() : null;
-        Set<String> trackedSet = playerUUID != null
-                ? new HashSet<>(TrackingStorage.getTracked(playerUUID))
+        System.out.println("TrackmonScreen initialized. Player UUID: " + playerUUID);
+
+        Set<String> activeSet = playerUUID != null
+                ? new HashSet<>(ActiveTracking.getActive(playerUUID))
                 : Set.of();
-        // Search box for filtering Pokémon list
+
+
         searchBox = new EditBox(this.font, this.width / 2 - 75, 20, 150, 20, Component.literal("Search..."));
         searchBox.setResponder(this::updateFilter);
         this.addRenderableWidget(searchBox);
-        // Create checkboxes for each Pokémon
+
         for (String name : allPokemon) {
-            TrackmonCheckbox checkbox = new TrackmonCheckbox(0, 0, checkboxWidth, checkboxHeight, Component.literal(name), trackedSet.contains(name));
+            TrackmonCheckbox checkbox = new TrackmonCheckbox(
+                    0, 0, checkboxWidth, checkboxHeight,
+                    Component.literal(name),
+                    activeSet.contains(name.toLowerCase()) // wichtig: lowercase!
+            );
             checkboxes.put(name, checkbox);
         }
 
+
         int scrollAreaX = this.width / 2 - checkboxWidth / 2;
         int scrollAreaY = listTop;
-        // Scroll up button
+
         this.addRenderableWidget(Button.builder(Component.literal("↑"), btn -> {
             if (scrollOffset > 0) scrollOffset--;
         }).bounds(scrollAreaX + checkboxWidth + 5, scrollAreaY, 20, 20).build());
-        // Scroll down button
+
         this.addRenderableWidget(Button.builder(Component.literal("↓"), btn -> {
             if (scrollOffset < filteredPokemon.size() - maxVisible) scrollOffset++;
         }).bounds(scrollAreaX + checkboxWidth + 5, scrollAreaY + listHeight - 20, 20, 20).build());
@@ -85,32 +93,44 @@ public class TrackmonScreen extends Screen {
         int buttonY = this.height - 80;
         int buttonWidth = 120;
 
-        // Start Tracking – activates chat notifications and saves to storage
+        // Start Tracking
         this.addRenderableWidget(Button.builder(Component.literal("Start Tracking"), btn -> {
             List<String> selected = getSelectedPokemon();
+            System.out.println("Start Tracking clicked. Selected: " + selected);
             if (playerUUID != null) {
+                // Immer aktiv setzen
                 ActiveTracking.setActive(playerUUID, selected);
 
+                // Sicherstellen, dass sie auch in der gespeicherten Liste sind
                 List<String> current = new ArrayList<>(TrackingStorage.getTracked(playerUUID));
                 for (String name : selected) {
-                    if (!current.contains(name)) {
+                    if (!current.contains(name.toLowerCase())) {
                         current.add(name);
+                        minecraft.player.sendSystemMessage(Component.literal("Tracking " + name));
                     }
                 }
                 TrackingStorage.setTracked(playerUUID, current);
             }
         }).bounds(this.width / 2 - buttonWidth - spacing, buttonY, buttonWidth, 20).build());
 
-        // Stop Tracking – disables chat notifications only
+
+
+        // Stop Tracking
         this.addRenderableWidget(Button.builder(Component.literal("Stop Tracking"), btn -> {
             List<String> selected = getSelectedPokemon();
+            System.out.println("Stop Tracking clicked. Selected: " + selected);
             if (playerUUID != null) {
                 ActiveTracking.remove(playerUUID, selected);
+                for (String name : selected) {
+                    minecraft.player.sendSystemMessage(Component.literal("Stopped tracking " + name));
+                }
             }
         }).bounds(this.width / 2 + spacing, buttonY, buttonWidth, 20).build());
 
-        // Clear – removes all tracking data
+
+        // Clear
         this.addRenderableWidget(Button.builder(Component.literal("Clear"), btn -> {
+            System.out.println("Clear clicked.");
             if (playerUUID != null) {
                 ActiveTracking.clear(playerUUID);
                 TrackingStorage.clear(playerUUID);
@@ -118,11 +138,13 @@ public class TrackmonScreen extends Screen {
             checkboxes.values().forEach(cb -> cb.setChecked(false));
         }).bounds(this.width / 2 - buttonWidth - spacing, buttonY + 25, buttonWidth, 20).build());
 
-        // Close GUI
+        // Close
         this.addRenderableWidget(Button.builder(Component.literal("Close"), btn -> {
+            System.out.println("Close clicked.");
             this.onClose();
         }).bounds(this.width / 2 + spacing, buttonY + 25, buttonWidth, 20).build());
     }
+
 
     private void updateFilter(String input) {
         scrollOffset = 0;

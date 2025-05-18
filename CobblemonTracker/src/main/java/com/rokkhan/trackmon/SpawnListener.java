@@ -27,46 +27,35 @@ public class SpawnListener {
     public static void onEntityJoin(EntityJoinLevelEvent event) {
         Level level = event.getLevel();
 
-        // Ignore client-side events
+
         if (level.isClientSide()) return;
 
         Entity entity = event.getEntity();
 
-        // Only handle Pokémon entities
         if (entity instanceof PokemonEntity pokemonEntity) {
-
-            // Ignore Pokémon that were sent out by a player (e.g. from a Pokéball)
             if (pokemonEntity.getOwner() != null) return;
 
-            // Get the Pokémon's species name and format it (capitalize first letter)
             String rawName = pokemonEntity.getPokemon().getSpecies().getName();
-            String name = rawName.substring(0, 1).toUpperCase() + rawName.substring(1).toLowerCase();
+            String name = rawName.toLowerCase(); // für Vergleich
+            String displayName = rawName.substring(0, 1).toUpperCase() + rawName.substring(1); // für Anzeige
 
-            // Get the spawn position
             BlockPos pos = entity.blockPosition();
 
-            // Check all players in the world
             for (Player player : level.players()) {
                 if (player instanceof ServerPlayer serverPlayer) {
                     var uuid = serverPlayer.getUUID();
-
-                    // Check if the Pokémon is within tracking radius
                     double distanceSquared = serverPlayer.distanceToSqr(pokemonEntity);
+
                     if (distanceSquared <= Config.trackingRadius * Config.trackingRadius) {
-
-                        // Check if the player is tracking this Pokémon and it's actively being tracked
                         if (TrackingStorage.isTracked(uuid, name) && ActiveTracking.isActive(uuid, name)) {
-
-                            // Send a system message to the player
                             serverPlayer.sendSystemMessage(
                                     Component.literal("")
-                                            .append(Component.literal(name).withStyle(ChatFormatting.RED))
+                                            .append(Component.literal(displayName).withStyle(ChatFormatting.RED))
                                             .append(Component.literal(" has spawned at: " + pos.toShortString()).withStyle(Style.EMPTY))
                             );
 
-                            // Optional: log the spawn to the console
                             if (Config.enableTrackingLog) {
-                                System.out.println("Tracked spawn: " + name + " at " + pos);
+                                System.out.println("Tracked spawn: " + displayName + " at " + pos);
                             }
                         }
                     }
@@ -74,4 +63,5 @@ public class SpawnListener {
             }
         }
     }
+
 }
